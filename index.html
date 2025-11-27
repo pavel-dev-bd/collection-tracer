@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>💰 Collection Tracker</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./src/css/style.css" />
+  </head>
+  <body>
+    <div id="app-container">
+      <!-- Modern Header -->
+      <header class="modern-header">
+        <div class="header-top">
+          <div class="header-brand">
+            <div class="brand-icon"><i class="fa-solid fa-coins" aria-hidden="true"></i></div>
+            <div class="brand-text">
+              <h1 class="brand-name">Tracker</h1>
+              <p class="brand-title">Collection Manager</p>
+            </div>
+          </div>
+          <div class="header-badges">
+            <span id="top-due-count" class="header-badge due">0</span>
+            <span id="top-cash-count" class="header-badge cash">0</span>
+          </div>
+          <button id="reset-btn" class="header-icon-btn" title="Reset all data">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Summary Section (Card-based) -->
+      <section class="summary-section">
+        <div class="summary-container">
+          <div class="summary-card summary-total">
+            <div class="summary-label">Total Stores</div>
+            <div class="summary-value" id="total-stores">0</div>
+          </div>
+          <div class="summary-card summary-due">
+            <div class="summary-label">Total Due</div>
+            <div class="summary-value" id="total-due">0 BDT</div>
+          </div>
+          <div class="summary-card summary-cash">
+            <div class="summary-label">Collected</div>
+            <div class="summary-value" id="total-cash">0 BDT</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls Bar -->
+      <div class="controls-bar">
+        <button id="export-csv" class="control-btn" title="Export CSV">
+          <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+        </button>
+        <button id="import-csv" class="control-btn" title="Import CSV">
+          <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+        </button>
+        <select id="sort-select" class="sort-select">
+          <option value="newest">🕐 Newest</option>
+          <option value="oldest">🕑 Oldest</option>
+          <option value="amount-desc">📈 Big Amount</option>
+          <option value="amount-asc">📉 Small Amount</option>
+          <option value="name-asc">A ➜ Z</option>
+          <option value="name-desc">Z ➜ A</option>
+        </select>
+        <input
+          id="import-file"
+          type="file"
+          accept="text/csv"
+          style="display: none"
+        />
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="search-container">
+          <input
+            type="text"
+            id="store-search"
+            placeholder="Search stores..."
+            class="search-input"
+          />
+          <span class="search-icon">🔍</span>
+          <div
+            id="search-suggestions"
+            class="suggestions"
+            aria-hidden="true"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-button active" data-type="DUE">
+          <span class="tab-icon"><i class="fa-solid fa-clock"></i></span>
+          <span class="tab-label">Due</span>
+        </button>
+        <button class="tab-button" data-type="CASH">
+          <span class="tab-icon"><i class="fa-solid fa-money-bill-wave"></i></span>
+          <span class="tab-label">Collected</span>
+        </button>
+      </div>
+
+      <!-- Collection List -->
+  <ul id="collection-list" class="collection-list"></ul>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state" style="display: none">
+        <div class="empty-icon">📭</div>
+        <h3>No Collections Yet</h3>
+        <p>Tap the + button to add your first collection</p>
+      </div>
+
+      <!-- Floating Action Button -->
+      <button id="add-store-btn" class="fab-modern" aria-label="Add collection">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      </button>
+
+      <!-- Add/Edit Modal -->
+      <div id="modal" class="modal modern-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <div class="modal-header modern-modal-header">
+            <h2 id="modal-title">Add New Collection</h2>
+            <button type="button" id="close-modal-btn" class="close-btn">
+              ✕
+            </button>
+          </div>
+          <form id="store-form" class="modern-form">
+            <input type="hidden" id="store-id-field" />
+
+            <div class="form-group modern-form-group p-relative">
+              <label for="store-name-field">Store Name</label>
+              <div class="input-with-addon">
+                <input
+                  type="text"
+                  id="store-name-field"
+                  placeholder="Enter store name"
+                  required
+                  class="modern-input"
+                />
+                    <button
+                      type="button"
+                      id="scan-qr-btn"
+                      class="addon-btn"
+                      title="Scan QR Code"
+                    >
+                      <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                    </button>
+              </div>
+              <div
+                id="name-suggestions"
+                class="suggestions"
+                aria-hidden="true"
+              ></div>
+              <div id="qr-scan-area" class="qr-scan-area" style="display: none">
+                <video id="qr-video" playsinline autoplay></video>
+                <button
+                  type="button"
+                  id="stop-qr-btn"
+                  class="btn-stop-qr"
+                >
+                  Stop Scanning
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group modern-form-group">
+              <label for="store-amount-field">Amount (BDT)</label>
+              <input
+                type="number"
+                id="store-amount-field"
+                placeholder="0"
+                required
+                class="modern-input"
+              />
+            </div>
+
+            <div class="form-group modern-form-group">
+              <label for="store-date-field">Date</label>
+              <input 
+                type="date" 
+                id="store-date-field" 
+                required 
+                class="modern-input"
+              />
+            </div>
+
+            <div class="form-group modern-form-group">
+              <label for="collection-type-field">Type</label>
+              <select id="collection-type-field" required class="modern-select">
+                <option value="">Select type</option>
+                <option value="DUE">📌 Due</option>
+                <option value="CASH">💵 Collected</option>
+              </select>
+            </div>
+
+            <div class="modal-buttons modern-modal-buttons">
+              <button type="submit" class="btn btn-primary btn-large">
+                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                Save Collection
+              </button>
+              <button type="button" id="cancel-btn" class="btn btn-secondary btn-large">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div id="delete-modal" class="modal modern-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content confirm-modal">
+          <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h2>Delete Collection?</h2>
+          <p id="delete-message">
+            Are you sure you want to delete this collection?
+          </p>
+          <div class="modal-buttons modern-modal-buttons">
+            <button id="confirm-delete-btn" class="btn btn-danger btn-large">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              Delete
+            </button>
+            <button id="cancel-delete-btn" class="btn btn-secondary btn-large">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Convert (DUE → CASH) Confirmation Modal -->
+      <div id="convert-modal" class="modal modern-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content confirm-modal">
+          <div class="modal-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <h2 id="convert-title">Collect Amount?</h2>
+          <p id="convert-message">
+            Mark this collection as collected?
+          </p>
+          <div class="modal-buttons modern-modal-buttons">
+            <button id="confirm-convert-btn" class="btn btn-primary btn-large">
+              <i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
+              Yes, Collect
+            </button>
+            <button id="cancel-convert-btn" class="btn btn-secondary btn-large">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Modal -->
+      <div id="reset-modal" class="modal modern-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content confirm-modal">
+          <div class="modal-icon"><i class="fa-solid fa-gear"></i></div>
+          <h2>Reset All Data?</h2>
+          <p id="reset-message">
+            This will delete all collections. Enter password to continue:
+          </p>
+          <input
+            type="password"
+            id="reset-password"
+            placeholder="Enter password"
+            class="modern-input"
+          />
+          <div class="modal-buttons modern-modal-buttons">
+            <button id="confirm-reset-btn" class="btn btn-danger btn-large">
+              Reset
+            </button>
+            <button id="cancel-reset-btn" class="btn btn-secondary btn-large">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Toast -->
+      <div id="toast" class="toast modern-toast"></div>
+    </div>
+    <script src="./src/js/main.js"></script>
+  </body>
+</html>
