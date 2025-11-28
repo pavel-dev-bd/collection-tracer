@@ -130,6 +130,9 @@ body {
     height: 80px;
     border-radius: 10px;
 }
+button#reset-btn {
+    margin-left: 10px;
+}
 .brand-text h1 {
     font-size: 22px;
     font-weight: 700;
@@ -839,7 +842,7 @@ body {
 .suggestions {
     visibility: hidden;
     position: absolute;
-    top: 100%;
+    top: 33%;
     left: 0;
     right: 0;
     background: var(--color-card-bg);
