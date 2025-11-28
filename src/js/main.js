@@ -138,6 +138,32 @@ let pendingDeleteId = null; // Track which item to delete
 const STORAGE_KEY = "collections_v1";
 const RESET_PASSWORD = "1234"; // Simple password for reset
 
+// PWA Install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('✅ PWA install prompt available');
+  // Show custom install banner if desired
+  showToast('success', '📱 App can be installed. Use menu for options.');
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 App installed successfully');
+  deferredPrompt = null;
+  showToast('success', '🎉 App installed successfully!');
+});
+
+// Listen for SW messages (sync notifications)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data.type === 'SYNC_SUCCESS') {
+      console.log('📊 Collections synced:', event.data.message);
+      renderCollections();
+    }
+  });
+}
+
 // Suggestion elements
 const searchSuggestionsEl = document.getElementById("search-suggestions");
 const nameSuggestionsEl = document.getElementById("name-suggestions");

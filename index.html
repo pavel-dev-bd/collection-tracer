@@ -2,13 +2,35 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="description" content="Track your dues and cash collections easily with Collection Tracker PWA. Works offline, syncs automatically." />
+        <meta name="theme-color" content="#667eea" />
+        <meta name="background_color" content="#667eea" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Collection Tracker" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#667eea" />
+        <meta name="msapplication-config" content="./browserconfig.xml" />
+        <meta name="keywords" content="collection tracker, due tracker, cash collection, pwa, offline app, finance manager, collection manager" />
+        <meta name="author" content="Md Pavel Miah" />
+        
+        <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" sizes="180x180" href="./src/images/icon/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="./src/images/icon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="./src/images/icon/favicon-16x16.png">
         <title>💰 Collection Tracker</title>
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="./manifest.json" />
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="./src/css/style.css" />
     </head>
     <body>
+      <!-- Splash Loader Overlay -->
+      <div id="splash-loader" style="position:fixed;z-index:9999;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);transition:opacity 0.5s;">
+        <img src="./src/images/homelogo.png" alt="App Loading" style="width:120px;height:120px;border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.18);background:#fff;padding:0px;" />
+      </div>
       <!-- Universal Password Modal -->
       <div id="password-modal" class="modal modern-modal">
         <div class="modal-overlay"></div>
@@ -29,7 +51,7 @@
       <header class="modern-header">
         <div class="header-top">
           <div class="header-brand">
-            <div class="brand-icon"><i class="fa-solid fa-coins" aria-hidden="true"></i></div>
+            <div class=""><img class="logo" height="30" width="30" src="./src/images/logo.png" alt="logo" ></div>
             <div class="brand-text">
               <h1 class="brand-name">Tracker</h1>
               <p class="brand-title">Collection Manager</p>
@@ -299,5 +321,27 @@
       <div id="toast" class="toast modern-toast"></div>
     </div>
     <script src="./src/js/main.js"></script>
+    <script>
+      // Splash loader fade out on DOMContentLoaded
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          var splash = document.getElementById('splash-loader');
+          if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(function() { splash.style.display = 'none'; }, 500);
+          }
+        }, 600); // Show splash for at least 600ms
+      });
+    </script>
+    <script>
+      // Register Service Worker for PWA
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+          console.log('✅ Service Worker registered:', registration);
+        }).catch((error) => {
+          console.warn('❌ Service Worker registration failed:', error);
+        });
+      }
+    </script>
   </body>
 </html>
