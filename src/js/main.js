@@ -714,17 +714,17 @@ function exportCSV() {
 
 /** Parse a simple CSV text and return objects (handles header) */
 function parseCSVText(text) {
-  console.log(text);
+  
   
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-    console.log(lines);
+   
     
   if (!lines.length) return [];
   const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  console.log(header);
+  
   
   const results = [];
   for (let i = 1; i < lines.length; i++) {
@@ -735,7 +735,7 @@ function parseCSVText(text) {
       const raw = cols[idx] ? cols[idx].trim().replace(/^"|"$/g, "") : "";
       obj[h] = raw;
     });
-    console.log(obj);
+    
     
     // Normalize fields we care about
     if (obj.name || obj.id) {
