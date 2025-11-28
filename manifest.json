@@ -1,6 +1,6 @@
 {
   "name": "DUCAP",
-  "short_name": "Collection Tracker",
+  "short_name": "Ducap",
   "description": "A modern progressive web app to track your dues and cash collections with ease. Works offline, syncs automatically.",
   "start_url": "./index.html",
   "scope": "./",
