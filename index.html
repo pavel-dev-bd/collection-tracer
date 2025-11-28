@@ -1,14 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>💰 Collection Tracker</title>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="./src/css/style.css" />
-  </head>
-  <body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>💰 Collection Tracker</title>
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="./src/css/style.css" />
+    </head>
+    <body>
+      <!-- Universal Password Modal -->
+      <div id="password-modal" class="modal modern-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content confirm-modal">
+          <div class="modal-icon"><i class="fa-solid fa-lock"></i></div>
+          <h2 id="password-modal-title">Password Required</h2>
+          <p id="password-modal-message">Enter password to continue:</p>
+          <input type="password" id="password-modal-input" class="modern-input" placeholder="Enter password" autocomplete="current-password" />
+          <div class="modal-buttons modern-modal-buttons">
+            <button id="password-modal-confirm" class="btn btn-primary btn-large">Continue</button>
+            <button id="password-modal-cancel" class="btn btn-secondary btn-large">Cancel</button>
+          </div>
+        </div>
+    </div>
+
     <div id="app-container">
       <!-- Modern Header -->
       <header class="modern-header">

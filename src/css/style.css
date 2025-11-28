@@ -72,10 +72,9 @@ body {
     background: linear-gradient(135deg, var(--color-primary-1) 0%, var(--color-primary-2) 100%);
     color: var(--color-text-dark);
     min-height: 100vh;
-    padding: 12px;
     overflow-x: hidden;
-}
-p-relative{
+}toast
+.p-relative{
     position: relative;
 }
 /* ============================================
@@ -896,10 +895,9 @@ p-relative{
 
 .modern-toast {
     position: fixed;
-    bottom: 100px;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--color-toast-success);
     color: var(--color-toast-text);
     padding: 14px 20px;
     border-radius: 12px;
@@ -911,12 +909,20 @@ p-relative{
     text-align: center;
     font-weight: 500;
     font-size: 14px;
+    z-index: 110;
 }
 
 .modern-toast.active {
     opacity: 1;
     pointer-events: auto;
     animation: slideIn 0.3s ease;
+}
+
+.modern-toast.success {
+    background: var(--color-toast-success);
+}
+.modern-toast.error {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
 }
 
 /* ============================================
