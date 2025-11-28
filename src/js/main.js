@@ -143,7 +143,7 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  console.log('✅ PWA install prompt available');
+  //console.log('✅ PWA install prompt available');
   // Show custom install banner if desired
   showToast('success', '📱 App can be installed. Use menu for options.');
 });
@@ -265,6 +265,7 @@ function updateTabCounts() {
   // Header small badges
   const topDue = document.getElementById("top-due-count");
   const topCash = document.getElementById("top-cash-count");
+ 
   if (topDue) topDue.textContent = dueCount;
   if (topCash) topCash.textContent = cashCount;
 }
@@ -427,7 +428,12 @@ function updateSummary() {
     "total-cash"
   ).textContent = `${totalCash.toLocaleString()} BDT`;
   // Also update tab badges and header counts
+   const topTotalCash = document.querySelector("#top-totall-count .total-cash");
+   console.log(topTotalCash);
+   
+  if (topTotalCash) topTotalCash.innerHTML = `&#x09F3; ${(totalDue + totalCash).toLocaleString()}`;
   updateTabCounts();
+  
 }
 
 // --- Password Modal Logic ---
