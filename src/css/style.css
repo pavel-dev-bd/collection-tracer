@@ -842,7 +842,7 @@ button#reset-btn {
 .suggestions {
     visibility: hidden;
     position: absolute;
-    top: 33%;
+    top: 72px;
     left: 0;
     right: 0;
     background: var(--color-card-bg);
