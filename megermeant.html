@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>BDT Cash Counter — Collection Tracker Style</title>
+    <meta name="description" content="Cash counter (BDT) with Collection Tracker modern UI" />
+    <link rel="stylesheet" href="./src/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class=" megermeant" id="app-container">
+      <!-- Reuse modern header from index.html -->
+      <header class="modern-header">
+        <div class="header-top">
+          <div class="header-brand">
+            <div><img class="logo" height="30" width="30" src="./src/images/logo.png" alt="logo" /></div>
+            <div class="brand-text">
+              <h1 class="brand-name">Cash Counter</h1>
+              <p class="brand-title">Quick BDT Counter</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <a href="./index.html" class="btn btn-secondary">Back</a>
+          </div>
+        </div>
+      </header>
+
+      <main class="page-main" style="padding:18px;">
+        <section class="card">
+          <div class="card-body">
+            <div class="counter-body">
+              <table id="noteTable">
+                <thead>
+                  <tr>
+                    <th>Note</th>
+                    <th>× Qty</th>
+                    <th>= Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="note-cell">৳1000</td><td><input type="number" class="modern-input" min="0" value="" data-note="1000"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳500</td><td><input type="number" class="modern-input" min="0" value="" data-note="500"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳200</td><td><input type="number" class="modern-input" min="0" value="" data-note="200"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳100</td><td><input type="number" class="modern-input" min="0" value="" data-note="100"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳50</td><td><input type="number" class="modern-input" min="0" value="" data-note="50"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳20</td><td><input type="number" class="modern-input" min="0" value="" data-note="20"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳10</td><td><input type="number" class="modern-input" min="0" value="" data-note="10"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳5</td><td><input type="number" class="modern-input" min="0" value="" data-note="5"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳2</td><td><input type="number" class="modern-input" min="0" value="" data-note="2"></td><td class="amount ">৳0</td></tr>
+                  <tr><td class="note-cell">৳1</td><td><input type="number" class="modern-input" min="0" value="" data-note="1"></td><td class="amount ">৳0</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td colspan="2">Cash in Hand (Counted)</td>
+                    <td id="grandTotal">৳0</td>
+                  </tr>
+                  <tr class="total-row sell-row">
+                    <td colspan="2">Total Sell Amount</td>
+                    <td><input type="number" class="modern-input" id="totalSell" min="0" value="" placeholder="Enter sell"></td>
+                  </tr>
+                  <tr class="total-row" style="background:#fef3c7;">
+                    <td colspan="2" style="color:#d97706;">Sub Total (Sell - Cash)</td>
+                    <td id="subTotal" style="color:#d97706;">৳0</td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+                <button class="btn btn-danger" id="reset-btn-page">Reset All</button>
+                
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+     
+    </div>
+
+    <!-- Scoped calculation script (no global collisions) -->
+    <script>
+      (function(){
+        const noteInputs = document.querySelectorAll('input[data-note]');
+        const totalSellInput = document.getElementById('totalSell');
+        const grandTotalEl = document.getElementById('grandTotal');
+        const subTotalEl = document.getElementById('subTotal');
+        const resetBtn = document.getElementById('reset-btn-page');
+
+        function calculate() {
+          let cashCounted = 0;
+          noteInputs.forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const noteValue = parseInt(input.dataset.note);
+            const amount = qty * noteValue;
+            cashCounted += amount;
+            const row = input.closest('tr');
+            const amountEl = row.querySelector('.amount');
+            if(amountEl) amountEl.textContent = `৳${amount.toLocaleString()}`;
+          });
+
+          const totalSell = parseInt(totalSellInput.value) || 0;
+          const subTotal = cashCounted - totalSell;
+
+          grandTotalEl.textContent = `৳${cashCounted.toLocaleString()}`;
+          subTotalEl.textContent = subTotal >= 0 ? `৳${subTotal.toLocaleString()}` : `-৳${Math.abs(subTotal).toLocaleString()}`;
+          subTotalEl.style.color = subTotal >= 0 ? '#166534' : '#dc2626';
+        }
+
+        noteInputs.forEach(input => { input.addEventListener('input', calculate); input.addEventListener('change', calculate); });
+        totalSellInput.addEventListener('input', calculate); totalSellInput.addEventListener('change', calculate);
+
+        function resetAll(){ noteInputs.forEach(i => i.value = 0); totalSellInput.value = 0; calculate(); }
+        resetBtn.addEventListener('click', resetAll);
+
+        // expose for legacy inline usage if needed
+        window.resetAll = resetAll;
+
+        // initial
+        calculate();
+      })();
+    </script>
+  </body>
+</html>

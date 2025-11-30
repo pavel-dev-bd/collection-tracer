@@ -6,6 +6,7 @@ const RUNTIME_CACHE = 'collection-tracker-runtime-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+   './megermeant.html',
   './src/css/style.css',
   './src/js/main.js',
   './manifest.json',

@@ -135,6 +135,19 @@ const resetModalEl = document.getElementById("reset-modal");
 let pendingConvertId = null; // Track which item to convert
 let pendingDeleteId = null; // Track which item to delete
 
+// Product-related inputs in the add/edit modal
+const productSelectEl = document.getElementById("product-select");
+const productQtyEl = document.getElementById("product-qty-field");
+const productUnitPriceEl = document.getElementById("product-unitprice-field");
+const amountEl = document.getElementById("store-amount-field");
+const addProductBtn = document.getElementById("add-product-row");
+const productListEl = document.getElementById("product-list");
+const productTotalEl = document.getElementById("product-total");
+const productTabs = document.querySelectorAll(".product-tab");
+const productsPanel = document.getElementById("products-panel");
+const manualPanel = document.getElementById("manual-panel");
+let modalProductRows = []; // rows in the modal for multiple products
+
 const STORAGE_KEY = "collections_v1";
 const RESET_PASSWORD = "1234"; // Simple password for reset
 
@@ -318,16 +331,27 @@ function renderCollections() {
       ? new Date(item.date).toLocaleDateString()
       : "";
     const createdAgo = item.createdAt ? formatTimeShort(item.createdAt) : "";
+    // build product meta (multiple products or single legacy fields)
+    let productMeta = "";
+    if (item.products && item.products.length) {
+      productMeta = item.products
+        .map(p => `${p.label||p.product} x ${p.quantity || 1} — ${((p.quantity||0)*(p.unitPrice||0)).toLocaleString()} BDT`)
+        .join('<br>');
+    } else if (item.productLabel) {
+      productMeta = `${item.productLabel} x ${item.quantity || 1}`;
+    }
 
-    li.innerHTML = `
-            <div class="collection-info">
-                <div class="collection-name">${item.name}</div>
-                <div class="collection-meta">
-                    ${createdAgo ? `<span>⏱ ${createdAgo}</span>` : ""}
-                    
-                </div>
-            </div>
-            <div class="collection-amount">${item.amount.toLocaleString()} BDT</div>
+  li.innerHTML = `
+      <div class="collection-info">
+        <div class="d-flex">
+        <div class="collection-name"> ${item.name}  </div>
+        <span class="collection-time"> ${createdAgo ? `<span>⏱ ${createdAgo}</span>` : ""}</sapn>
+         </div>
+        <div class="collection-meta">
+          ${productMeta ? `<div class="product-meta">${productMeta}</div>` : ""}
+        </div>
+      </div>
+      <div class="collection-amount">${(item.amount||0).toLocaleString()} BDT</div>
             <div class="collection-actions">
                 ${
                   item.type === "DUE"
@@ -410,6 +434,144 @@ function setName(name) {
   nameSuggestionsEl.classList.remove("active");
 }
 
+
+
+/** Product selection & auto-calculation helpers */
+function getSelectedProductInfo() {
+  if (!productSelectEl) return { key: null, label: null, price: 0 };
+  const opt = productSelectEl.options[productSelectEl.selectedIndex];
+  const key = productSelectEl.value || null;
+  const label = opt ? opt.text : null;
+  const price = opt && opt.dataset && opt.dataset.price ? parseFloat(opt.dataset.price) : 0;
+  return { key, label, price };
+}
+
+function updateAmountFromProduct() {
+  if (!productSelectEl || !productQtyEl || !productUnitPriceEl || !amountEl) return;
+  const { price } = getSelectedProductInfo();
+  const qty = parseFloat(productQtyEl.value) || 0;
+  // If selected product has a default price, populate unit price unless user has custom
+  if (price && (!productUnitPriceEl.value || parseFloat(productUnitPriceEl.value) === 0)) {
+    productUnitPriceEl.value = price;
+  }
+  const unit = parseFloat(productUnitPriceEl.value) || 0;
+  const total = qty * unit;
+  amountEl.value = total.toFixed(2);
+}
+
+// --- Multiple product (modal) management ---
+function renderProductList() {
+  if (!productListEl) return;
+  productListEl.innerHTML = "";
+  modalProductRows.forEach((row, idx) => {
+    const div = document.createElement('div');
+    div.className = 'product-row';
+    div.style.display = 'flex';
+    div.style.justifyContent = 'space-between';
+    div.style.alignItems = 'center';
+    div.style.gap = '8px';
+    div.innerHTML = `
+      <div style="flex:1">${row.label || row.product} <small style="color:#666"> x ${row.quantity}</small></div>
+      
+  
+      <div style="width:120px;text-align:right">${((row.quantity||0)*(row.unitPrice||0)).toFixed(2)} BDT</div>
+      <div style="width:40px;text-align:right"><button type="button" data-idx="${idx}" class="btn btn-danger btn-sm remove-product">✕</button></div>
+    `;
+    productListEl.appendChild(div);
+  });
+
+  // attach remove handlers
+  productListEl.querySelectorAll('.remove-product').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const i = parseInt(e.currentTarget.dataset.idx);
+      if (!isNaN(i)) {
+        modalProductRows.splice(i,1);
+        renderProductList();
+        updateProductTotal();
+      }
+    });
+  });
+}
+
+function updateProductTotal() {
+  const total = modalProductRows.reduce((s, r) => s + ( (r.quantity||0) * (r.unitPrice||0) ), 0);
+  if (productTotalEl) productTotalEl.textContent = total.toFixed(2);
+  if (amountEl) amountEl.value = total.toFixed(2);
+}
+
+function clearModalProducts() {
+  modalProductRows = [];
+  renderProductList();
+  updateProductTotal();
+}
+
+function addProductRowFromInputs() {
+  if (!productSelectEl || !productQtyEl || !productUnitPriceEl) return;
+  const key = productSelectEl.value;
+  const opt = productSelectEl.options[productSelectEl.selectedIndex];
+  const label = opt ? opt.text : key;
+  const qty = parseInt(productQtyEl.value) || 0;
+  const unit = parseFloat(productUnitPriceEl.value) || 0;
+  if (qty === 0) {
+    showToast('error', 'Added product must have quantity greater than zero');
+    return;
+  }
+  if (unit === 0) {
+    showToast('error', 'Selected product must have a unit price');
+    return;
+  }
+  modalProductRows.push({ product: key, label, quantity: qty, unitPrice: unit });
+  // reset the small inputs for next addition
+  productQtyEl.value = qty > 1 ? qty : 0;
+  if (opt && opt.dataset && opt.dataset.price) {
+    productUnitPriceEl.value = opt.dataset.price;
+  } else {
+    productUnitPriceEl.value = '';
+  }
+  renderProductList();
+  updateProductTotal();
+}
+
+// attach add product button
+if (addProductBtn) addProductBtn.addEventListener('click', addProductRowFromInputs);
+
+// tab switching for product/manual panels
+if (productTabs && productTabs.length) {
+  productTabs.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      productTabs.forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const tab = e.currentTarget.dataset.tab;
+      if (tab === 'manual') {
+        if (productsPanel) productsPanel.style.display = 'none';
+        if (manualPanel) manualPanel.style.display = 'block';
+        document.querySelector('#product-select').style.display = 'none';
+      } else {
+        if (productsPanel) productsPanel.style.display = 'block';
+        if (manualPanel) manualPanel.style.display = 'none';
+        document.querySelector('#product-select').style.display = 'block';
+      }
+    });
+  });
+}
+
+// Attach listeners (guard for null when script loads)
+if (productSelectEl) {
+  productSelectEl.addEventListener('change', function() {
+    const { price, key } = getSelectedProductInfo();
+    if (key === 'other') {
+      productUnitPriceEl.value = '';
+      productUnitPriceEl.removeAttribute('readonly');
+    } else if (price) {
+      productUnitPriceEl.value = price;
+      productUnitPriceEl.setAttribute('readonly', 'true');
+    }
+    updateAmountFromProduct();
+  });
+}
+// if (productQtyEl) productQtyEl.addEventListener('input', updateAmountFromProduct);
+// if (productUnitPriceEl) productUnitPriceEl.addEventListener('input', updateAmountFromProduct);
+
 /** Updates the totals in the summary card. */
 function updateSummary() {
   const totalDue = collections
@@ -433,8 +595,110 @@ function updateSummary() {
    
   if (topTotalCash) topTotalCash.innerHTML = `&#x09F3; ${(totalDue + totalCash).toLocaleString()}`;
   updateTabCounts();
+  // update product summary table
+  renderProductSummary();
   
 }
+
+/** Renders product sell summary table (quantity and total amount per product) */
+function renderProductSummary() {
+  const tbody = document.querySelector('#product-summary-table tbody');
+  if (!tbody) return;
+
+  // Aggregate totals by product key or label
+  const map = new Map();
+
+  collections.forEach(c => {
+    // if collection has multiple products
+    if (c.products && Array.isArray(c.products) && c.products.length) {
+      c.products.forEach(p => {
+        const key = p.product || p.label || 'other';
+        const label = p.label || p.product || 'Other';
+        const qty = Number(p.quantity || 0);
+        const amt = Number((p.unitPrice || 0) * qty);
+        if (!map.has(key)) map.set(key, { label, qty:0, amt:0 });
+        const entry = map.get(key);
+        entry.qty += qty;
+        entry.amt += amt;
+      });
+    } else if (c.product || c.productLabel) {
+      // legacy single-product fields
+      const key = c.product || c.productLabel || 'other';
+      const label = c.productLabel || c.product || 'Other';
+      const qty = Number(c.quantity || 0) || (c.amount && c.unitPrice ? Math.round((c.amount / c.unitPrice)) : 0);
+      const amt = Number(c.amount || 0);
+      if (!map.has(key)) map.set(key, { label, qty:0, amt:0 });
+      const entry = map.get(key);
+      entry.qty += qty;
+      entry.amt += amt;
+    }
+  });
+
+  // Render rows sorted by amount desc
+  const rows = Array.from(map.entries()).sort((a,b) => b[1].amt - a[1].amt);
+  tbody.innerHTML = '';
+  let totalQty = 0;
+  let totalAmt = 0;
+  rows.forEach(([key, val]) => {
+    const tr = document.createElement('tr');
+    const nameTd = document.createElement('td');
+    nameTd.textContent = val.label || key;
+    const qtyTd = document.createElement('td'); qtyTd.className = 'right'; qtyTd.textContent = val.qty;
+    const amtTd = document.createElement('td'); amtTd.className = 'right'; amtTd.textContent = val.amt.toFixed(2);
+    tr.appendChild(nameTd); tr.appendChild(qtyTd); tr.appendChild(amtTd);
+    tbody.appendChild(tr);
+    totalQty += val.qty;
+    totalAmt += val.amt;
+  });
+
+  const totalQtyEl = document.getElementById('product-summary-total-qty');
+  const totalAmtEl = document.getElementById('product-summary-total-amt');
+  if (totalQtyEl) totalQtyEl.textContent = totalQty;
+  if (totalAmtEl) totalAmtEl.textContent = totalAmt.toFixed(2);
+  // Also render mobile-friendly content
+  // const mobileBody = document.getElementById('product-summary-mobile-body');
+  // if (mobileBody) {
+  //   mobileBody.innerHTML = '';
+  //   rows.forEach(([key, val]) => {
+  //     const wrap = document.createElement('div');
+  //     wrap.style.display = 'flex';
+  //     wrap.style.justifyContent = 'space-between';
+  //     wrap.style.padding = '8px 0';
+  //     wrap.style.borderBottom = '1px solid var(--color-border-light)';
+  //     const left = document.createElement('div'); left.textContent = val.label || key;
+  //     const right = document.createElement('div'); right.style.textAlign = 'right'; right.innerHTML = `<div>${val.qty} </div><div style="font-weight:700">${val.amt.toFixed(2)} BDT</div>`;
+  //     wrap.appendChild(left); wrap.appendChild(right);
+  //     mobileBody.appendChild(wrap);
+  //   });
+  //   const footer = document.createElement('div'); footer.style.paddingTop = '8px'; footer.style.fontWeight = '700'; footer.innerHTML = `Total QTY: ${totalQty}  · Total Price ${totalAmt.toFixed(2)} BDT`;
+  //   mobileBody.appendChild(footer);
+  // }
+}
+
+// Mobile modal open/close wiring
+document.addEventListener('DOMContentLoaded', function() {
+  const openBtn = document.getElementById('open-product-summary-mobile');
+  const closeBtn = document.getElementById('close-product-summary-mobile');
+  const modal = document.getElementById('product-summary-modal');
+  if (openBtn && modal) {
+    openBtn.addEventListener('click', function() {
+      modal.style.display = 'block';
+      // small delay to allow CSS transitions if any
+      setTimeout(() => modal.classList.add('active'), 10);
+    });
+  }
+  if (closeBtn && modal) {
+    closeBtn.addEventListener('click', function() {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 250);
+    });
+  }
+  // close when clicking overlay
+  if (modal) {
+    const overlay = modal.querySelector('.modal-overlay');
+    if (overlay) overlay.addEventListener('click', () => { modal.classList.remove('active'); setTimeout(() => modal.style.display='none',250); });
+  }
+});
 
 // --- Password Modal Logic ---
 const passwordModalEl = document.getElementById("password-modal");
@@ -492,16 +756,41 @@ function openModal(id = null) {
       message: "Enter password to edit this collection:",
       onConfirm: function () {
         const item = collections.find((c) => c.id === id);
-        if (item) {
-          document.getElementById("store-id-field").value = item.id;
-          document.getElementById("store-name-field").value = item.name;
-          document.getElementById("store-amount-field").value = item.amount;
-          document.getElementById("collection-type-field").value = item.type;
-          document.getElementById("store-date-field").value = item.date || "";
-          document.getElementById("modal-title").textContent =
-            "Edit Collection";
-          modalEl.classList.add("active");
-        }
+            if (item) {
+              document.getElementById("store-id-field").value = item.id;
+              document.getElementById("store-name-field").value = item.name;
+              document.getElementById("store-amount-field").value = item.amount;
+              document.getElementById("collection-type-field").value = item.type;
+              document.getElementById("store-date-field").value = item.date || "";
+              // populate product list if present
+              if (item.products && item.products.length) {
+                modalProductRows = item.products.map(p => ({ ...p }));
+                renderProductList();
+                updateProductTotal();
+                // switch to products tab
+                productTabs.forEach(b => b.classList.remove('active'));
+                const prodTab = document.querySelector('.product-tab[data-tab="products"]');
+                if (prodTab) prodTab.classList.add('active');
+                if (productsPanel) productsPanel.style.display = 'block';
+                if (manualPanel) manualPanel.style.display = 'none';
+              } else {
+                // reset modal product rows
+                clearModalProducts();
+                if (productSelectEl) productSelectEl.value = item.product || "";
+                if (productQtyEl) productQtyEl.value = item.quantity || 0;
+                if (productUnitPriceEl) productUnitPriceEl.value = item.unitPrice || "";
+                updateAmountFromProduct();
+                // switch to manual if no products
+                productTabs.forEach(b => b.classList.remove('active'));
+                const manTab = document.querySelector('.product-tab[data-tab="manual"]');
+                if (manTab) manTab.classList.add('active');
+                if (productsPanel) productsPanel.style.display = 'none';
+                if (manualPanel) manualPanel.style.display = 'block';
+              }
+              document.getElementById("modal-title").textContent =
+                "Edit Collection";
+              modalEl.classList.add("active");
+            }
       },
     });
   } else {
@@ -511,6 +800,10 @@ function openModal(id = null) {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("store-date-field").value = today;
     document.getElementById("collection-type-field").value = currentFilter;
+    // reset product inputs
+    if (productSelectEl) productSelectEl.value = "";
+    if (productQtyEl) productQtyEl.value = "";
+    if (productUnitPriceEl) productUnitPriceEl.value = "";
     modalEl.classList.add("active");
   }
 }
@@ -526,13 +819,42 @@ function saveCollection(event) {
 
   const id = parseInt(document.getElementById("store-id-field").value);
   const name = document.getElementById("store-name-field").value;
+  const type = document.getElementById("collection-type-field").value;
+  const addmodleTab= document.querySelector('.product-tabs .product-tab.active').dataset.tab;
+  if (!name || name.trim() === "") {
+    showToast("error","❌ Please enter a valid name");
+    return;
+  }
   const amount = parseFloat(
     document.getElementById("store-amount-field").value
   );
-  const type = document.getElementById("collection-type-field").value;
+  // If modal has multiple product rows, use those; otherwise fall back to single inputs
+  const products = (modalProductRows && modalProductRows.length) ? modalProductRows.slice() : null;
   const date = document.getElementById("store-date-field").value || null;
 
-  const newCollection = { name, amount, type, date };
+  // If products provided, calculate final amount from products
+  if (addmodleTab === 'products' && (!products || products.length === 0)) {
+    showToast("error","❌ Please add at least one product or switch to Manual entry");
+    return;
+  } else{
+    clearModalProducts()
+  }
+  const finalAmount = products && products.length
+    ? products.reduce((s, r) => s + ((r.quantity || 0) * (r.unitPrice || 0)), 0)
+    : amount;
+
+    if (isNaN(finalAmount) || finalAmount <= 0) {
+      showToast("error","❌ Please enter a valid amount greater than 0");
+      return;
+    }
+ 
+  const newCollection = {
+    name,
+    amount: finalAmount,
+    type,
+    date,
+    products: products || [],
+  };
 
   if (id) {
     // UPDATE
@@ -715,17 +1037,19 @@ function exportCSV() {
     showToast('error',"Nothing to export");
     return;
   }
-  const headers = ["id", "name", "amount", "type","createdAt", "date"];
-  const rows = collections.map((c) =>
-    [
+  const headers = ["id", "name", "products", "amount", "type", "date", "createdAt"];
+  const rows = collections.map((c) => {
+    const productsJson = JSON.stringify(c.products || []);
+    return [
       c.id,
-      `"${(c.name || "").replace(/"/g, '""')}"`,
+      '"' + ((c.name || "").replace(/"/g, '""')) + '"',
+      '"' + ((productsJson || "").replace(/"/g, '""')) + '"',
       c.amount,
       c.type,
       c.date || "",
       c.createdAt || "",
-    ].join(",")
-  );
+    ].join(",");
+  });
   
   const csv = [headers.join(","), ...rows].join("\n");
   

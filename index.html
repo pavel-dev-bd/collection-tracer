@@ -90,6 +90,50 @@
         </div>
       </section>
 
+      <!-- Product Sell Summary -->
+      <section class="product-summary-section">
+        <div class="product-summary-container">
+          <div class="product-summary-card">
+            <!-- Mobile: compact summary button (visible on small screens) -->
+            <div class="product-summary-mobile-actiond d-flex" style="margin-top:4px;gap: 5px;">
+              <button id="open-product-summary-mobile" class="btn btn-primary">Summary</button>
+              <a href="./megermeant.html"  class="btn btn-primary">Megermeant</a>
+            </div>
+            <!-- Mobile summary modal -->
+            <div id="product-summary-modal" class="modal modern-modal" style="display:none;">
+              <div class="modal-overlay"></div>
+              <div class="modal-content" style="max-height:70vh;overflow:auto;padding:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <h3 style="margin:0;">Product Summary</h3>
+                  <button id="close-product-summary-mobile" class="close-btn">✕</button>
+                </div>
+                 <div id="product-summary" class="product-summary">
+              <table id="product-summary-table" class="product-summary-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="right">Quantity</th>
+                    <th class="right">Total (BDT)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Rendered by JS -->
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td class="right" id="product-summary-total-qty">0</td>
+                    <td class="right" id="product-summary-total-amt">0.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Controls Bar -->
       <div class="controls-bar">
         <button id="export-csv" class="control-btn" title="Export CSV">
@@ -209,17 +253,54 @@
             </div>
 
             <div class="form-group modern-form-group">
-              <label for="store-amount-field">Amount (BDT)</label>
-              <input
-                type="number"
-                id="store-amount-field"
-                placeholder="0"
-                required
-                class="modern-input"
-              />
+              <label>Products</label>
+              <div class="product-tabs" style="display:flex;gap:8px;margin:8px 0 12px 0;">
+                <button type="button" class="product-tab  tab-button active" data-tab="products">Products</button>
+                <button type="button" class="product-tab tab-button " data-tab="manual">Manual Amount</button>
+                
+              </div>
+
+              <div id="products-panel">
+                <select  id="product-select" class="modern-select" style="flex:1;">
+                    <option value="" selected>-- Select product --</option>
+                    <option value="navy_10" data-price="8">Navy - 10h</option>
+                    <option value="navy_20" data-price="8">Navy - 20h</option>
+                    <option value="camel_20" data-price="9">Camel - 20h</option>
+                    <option value="ld_10" data-price="7">LD - 10h</option>
+                    <option value="other">Other</option>
+                </select>
+                <div id="product-qty-field-wrap" style="display:flex;gap:8px;align-items:flex-end;">
+                 
+                  <div style="flex: 1;">
+                    <label for="product-qty-field">Qty</label>
+                    <input type="number" id="product-qty-field" class="modern-input" min="0" value="0" />
+                  </div>
+                  <div style="width:90px;">
+                    <label for="product-unitprice-field">Unit Price</label>
+                    <input  type="number" id="product-unitprice-field" class="modern-input" min="0" step="0.01" readonly />
+                  </div>
+                  <div style="width:90px;">
+                    <button type="button" id="add-product-row" class="btn btn-primary" style="width:100%">Add</button>
+                  </div>
+                </div>
+
+                <div id="product-list" style="margin-top:10px;"></div>
+                <div class="product-total" style="margin-top:10px;font-weight:700;">Total: <span id="product-total">0.00</span> BDT</div>
+              </div>
+
+              <div id="manual-panel" style="display:none;">
+                <label for="store-amount-field" style="margin-top:8px;display:block;">Amount (BDT)</label>
+                <input
+                  type="number"
+                  id="store-amount-field"
+                  placeholder="0"
+                  required
+                  class="modern-input"
+                />
+              </div>
             </div>
 
-            <div class="form-group modern-form-group">
+            <div style="display: none;" class="form-group modern-form-group ">
               <label for="store-date-field">Date</label>
               <input 
                 type="date" 
@@ -229,7 +310,7 @@
               />
             </div>
 
-            <div class="form-group modern-form-group">
+            <div style="display: none;" class="form-group modern-form-group ">
               <label for="collection-type-field">Type</label>
               <select id="collection-type-field" required class="modern-select">
                 <option value="">Select type</option>
